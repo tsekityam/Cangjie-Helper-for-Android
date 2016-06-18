@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cangjie Helper</string>
+    <string name="action_legal">Legal</string>
+    <string name="search">Search</string>
+</resources>
