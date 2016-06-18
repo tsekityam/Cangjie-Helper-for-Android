@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
- package com.kytse.cangjiehelper;
+package com.kytse.cangjiehelper;
 
 import android.content.Context;
 import android.database.Cursor;

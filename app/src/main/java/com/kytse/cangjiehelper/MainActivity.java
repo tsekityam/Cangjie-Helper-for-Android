@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
- package com.kytse.cangjiehelper;
+package com.kytse.cangjiehelper;
 
 import android.net.Uri;
 import android.support.customtabs.CustomTabsIntent;
