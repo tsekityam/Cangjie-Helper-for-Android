@@ -19,6 +19,7 @@ package com.kytse.cangjiehelper;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.support.annotation.NonNull;
 
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
@@ -41,40 +42,46 @@ public class CangjieDBHelper extends SQLiteAssetHelper {
         if (mCangjieMap.containsKey(character)) {
             return mCangjieMap.get(character);
         } else {
-            SQLiteDatabase db = getReadableDatabase();
+            try {
+                SQLiteDatabase db = getReadableDatabase();
 
-            // get char index of the given char
-            Cursor charIndexCursor = db.query(
-                    "chars",
-                    new String[]{"char_index"},
-                    String.format("chchar = '%s'", character),
-                    null, null, null, null);
-            String char_index = charIndexCursor.moveToFirst() ? charIndexCursor.getString(0) : "";
-            charIndexCursor.close();
+                // get char index of the given char
+                Cursor charIndexCursor = db.query(
+                        "chars",
+                        new String[]{"char_index"},
+                        String.format("chchar = '%s'", character),
+                        null, null, null, null);
+                String char_index = charIndexCursor.moveToFirst() ? charIndexCursor.getString(0) : "";
+                charIndexCursor.close();
 
-            // return empty string if the char is not found in the table
-            if (char_index.isEmpty()) {
-                return "";
+                // return empty string if the char is not found in the table
+                if (char_index.isEmpty()) {
+                    return "";
+                }
+
+                // get the first cangjie input code with the given char index
+                Cursor codeCursor = db.query(
+                        "codes",
+                        new String[]{"code"},
+                        String.format("char_index = '%s'", char_index),
+                        null, null, null, null);
+                String inputCodeEN = codeCursor.moveToFirst() ? codeCursor.getString(0) : null;
+                codeCursor.close();
+
+                // return null of no input code is found
+                if (inputCodeEN == null) {
+                    return "";
+                }
+
+                String inputCodeCN = getCNInputCodeFromEN(inputCodeEN);
+
+                mCangjieMap.put(character, inputCodeCN);
+                return mCangjieMap.get(character);
+            } catch (SQLiteException e) {
+                e.printStackTrace();
             }
 
-            // get the first cangjie input code with the given char index
-            Cursor codeCursor = db.query(
-                    "codes",
-                    new String[]{"code"},
-                    String.format("char_index = '%s'", char_index),
-                    null, null, null, null);
-            String inputCodeEN = codeCursor.moveToFirst() ? codeCursor.getString(0) : null;
-            codeCursor.close();
-
-            // return null of no input code is found
-            if (inputCodeEN == null) {
-                return "";
-            }
-
-            String inputCodeCN = getCNInputCodeFromEN(inputCodeEN);
-
-            mCangjieMap.put(character, inputCodeCN);
-            return mCangjieMap.get(character);
+            return "";
         }
     }
 
