@@ -46,6 +46,7 @@ public class MainActivity extends ActionBarActivity implements TextWatcher {
 
         ListView listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(mAdapter);
+        listView.setDivider(null);
     }
 
     @Override

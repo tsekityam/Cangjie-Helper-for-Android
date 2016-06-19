@@ -17,6 +17,7 @@
 package com.kytse.cangjiehelper;
 
 import android.app.Activity;
+import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,12 +41,12 @@ public class InputCodeAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return mCharacters.size();
+        return mCharacters.size() + 1;
     }
 
     @Override
     public Object getItem(int position) {
-        return mCharacters.get(position);
+        return position == 0 ? null : mCharacters.get(position - 1);
     }
 
     @Override
@@ -60,19 +61,27 @@ public class InputCodeAdapter extends BaseAdapter {
         if (convertView == null) {
             convertView = mLayoutInflater.inflate(R.layout.item_input_code, parent, false);
             viewHolder = new ViewHolder();
+            viewHolder.cardView = (CardView) convertView.findViewById(R.id.card_view);
             viewHolder.textViewInput = (TextView) convertView.findViewById(R.id.textView_input);
             viewHolder.textViewCode = (TextView) convertView.findViewById(R.id.textView_code);
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
-            viewHolder.textViewCode.setText(mHelper.getInputCode(mCharacters.get(position)));
-            viewHolder.textViewInput.setText(mCharacters.get(position).toString());
+
+        if (position == 0) {
+            viewHolder.cardView.setVisibility(View.INVISIBLE);
+        } else {
+            viewHolder.cardView.setVisibility(View.VISIBLE);
+            viewHolder.textViewCode.setText(mHelper.getInputCode(mCharacters.get(position - 1)));
+            viewHolder.textViewInput.setText(mCharacters.get(position - 1).toString());
+        }
 
         return convertView;
     }
 
     private class ViewHolder {
+        CardView cardView;
         TextView textViewInput;
         TextView textViewCode;
     }
