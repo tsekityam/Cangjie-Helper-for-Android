@@ -19,6 +19,7 @@ package com.kytse.cangjiehelper;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.annotation.NonNull;
 
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
 
@@ -40,111 +41,128 @@ public class CangjieDBHelper extends SQLiteAssetHelper {
         if (mCangjieMap.containsKey(character)) {
             return mCangjieMap.get(character);
         } else {
-
             SQLiteDatabase db = getReadableDatabase();
-            String sql = String.format(
-                    "SELECT codes.code " +
-                            "FROM codes " +
-                            "WHERE codes.version = 3 " +
-                            "AND " +
-                            "codes.char_index = " +
-                            "(SELECT chars.char_index FROM chars WHERE chars.chchar = '%s')",
-                    character.toString());
 
-            Cursor cursor = db.rawQuery(sql, null);
-            String inputCodeEN = null;
-            StringBuilder inputCodeCN = new StringBuilder();
+            // get char index of the given char
+            Cursor charIndexCursor = db.query(
+                    "chars",
+                    new String[]{"char_index"},
+                    String.format("chchar = '%s'", character),
+                    null, null, null, null);
+            String char_index = charIndexCursor.moveToFirst() ? charIndexCursor.getString(0) : "";
+            charIndexCursor.close();
 
-            if (cursor.moveToFirst()) {
-                inputCodeEN = cursor.getString(0);
+            // return empty string if the char is not found in the table
+            if (char_index.isEmpty()) {
+                return "";
             }
 
-            for (int i = 0; i < (inputCodeEN != null ? inputCodeEN.length() : 0); i++) {
-                switch (inputCodeEN.charAt(i)) {
-                    case 'a':
-                        inputCodeCN.append("日");
-                        break;
-                    case 'b':
-                        inputCodeCN.append("月");
-                        break;
-                    case 'c':
-                        inputCodeCN.append("金");
-                        break;
-                    case 'd':
-                        inputCodeCN.append("木");
-                        break;
-                    case 'e':
-                        inputCodeCN.append("水");
-                        break;
-                    case 'f':
-                        inputCodeCN.append("火");
-                        break;
-                    case 'g':
-                        inputCodeCN.append("土");
-                        break;
-                    case 'h':
-                        inputCodeCN.append("竹");
-                        break;
-                    case 'i':
-                        inputCodeCN.append("戈");
-                        break;
-                    case 'j':
-                        inputCodeCN.append("十");
-                        break;
-                    case 'k':
-                        inputCodeCN.append("大");
-                        break;
-                    case 'l':
-                        inputCodeCN.append("中");
-                        break;
-                    case 'm':
-                        inputCodeCN.append("一");
-                        break;
-                    case 'n':
-                        inputCodeCN.append("弓");
-                        break;
-                    case 'o':
-                        inputCodeCN.append("人");
-                        break;
-                    case 'p':
-                        inputCodeCN.append("心");
-                        break;
-                    case 'q':
-                        inputCodeCN.append("手");
-                        break;
-                    case 'r':
-                        inputCodeCN.append("口");
-                        break;
-                    case 's':
-                        inputCodeCN.append("尸");
-                        break;
-                    case 't':
-                        inputCodeCN.append("廿");
-                        break;
-                    case 'u':
-                        inputCodeCN.append("山");
-                        break;
-                    case 'v':
-                        inputCodeCN.append("女");
-                        break;
-                    case 'w':
-                        inputCodeCN.append("田");
-                        break;
-                    case 'x':
-                        inputCodeCN.append("難");
-                        break;
-                    case 'y':
-                        inputCodeCN.append("卜");
-                        break;
-                    default:
-                        break;
-                }
+            // get the first cangjie input code with the given char index
+            Cursor codeCursor = db.query(
+                    "codes",
+                    new String[]{"code"},
+                    String.format("char_index = '%s'", char_index),
+                    null, null, null, null);
+            String inputCodeEN = codeCursor.moveToFirst() ? codeCursor.getString(0) : null;
+            codeCursor.close();
+
+            // return null of no input code is found
+            if (inputCodeEN == null) {
+                return "";
             }
 
-            mCangjieMap.put(character, inputCodeCN.toString());
+            String inputCodeCN = getCNInputCodeFromEN(inputCodeEN);
 
-            cursor.close();
-            return inputCodeCN.toString();
+            mCangjieMap.put(character, inputCodeCN);
+            return mCangjieMap.get(character);
         }
+    }
+
+    @NonNull
+    private String getCNInputCodeFromEN(String inputCodeEN) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < inputCodeEN.length(); i++) {
+            switch (inputCodeEN.charAt(i)) {
+                case 'a':
+                    stringBuilder.append("日");
+                    break;
+                case 'b':
+                    stringBuilder.append("月");
+                    break;
+                case 'c':
+                    stringBuilder.append("金");
+                    break;
+                case 'd':
+                    stringBuilder.append("木");
+                    break;
+                case 'e':
+                    stringBuilder.append("水");
+                    break;
+                case 'f':
+                    stringBuilder.append("火");
+                    break;
+                case 'g':
+                    stringBuilder.append("土");
+                    break;
+                case 'h':
+                    stringBuilder.append("竹");
+                    break;
+                case 'i':
+                    stringBuilder.append("戈");
+                    break;
+                case 'j':
+                    stringBuilder.append("十");
+                    break;
+                case 'k':
+                    stringBuilder.append("大");
+                    break;
+                case 'l':
+                    stringBuilder.append("中");
+                    break;
+                case 'm':
+                    stringBuilder.append("一");
+                    break;
+                case 'n':
+                    stringBuilder.append("弓");
+                    break;
+                case 'o':
+                    stringBuilder.append("人");
+                    break;
+                case 'p':
+                    stringBuilder.append("心");
+                    break;
+                case 'q':
+                    stringBuilder.append("手");
+                    break;
+                case 'r':
+                    stringBuilder.append("口");
+                    break;
+                case 's':
+                    stringBuilder.append("尸");
+                    break;
+                case 't':
+                    stringBuilder.append("廿");
+                    break;
+                case 'u':
+                    stringBuilder.append("山");
+                    break;
+                case 'v':
+                    stringBuilder.append("女");
+                    break;
+                case 'w':
+                    stringBuilder.append("田");
+                    break;
+                case 'x':
+                    stringBuilder.append("難");
+                    break;
+                case 'y':
+                    stringBuilder.append("卜");
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return stringBuilder.toString();
     }
 }
